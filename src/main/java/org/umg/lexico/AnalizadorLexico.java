@@ -1,44 +1,41 @@
-package org.umg.analisis.lexico;
+package org.umg.lexico;
 
 import org.umg.TipoToken;
 import org.umg.Token;
 
 import java.util.*;
 import java.util.regex.*;
-import java.util.stream.Collectors;
 
-/**
- * Analizador léxico que convierte código fuente en una secuencia de tokens.
- */
 public class AnalizadorLexico {
-
     private static final Map<String, TipoToken> PALABRAS_RESERVADAS = Map.ofEntries(
-            Map.entry("if", TipoToken.PALABRA_RESERVADA),
-            Map.entry("else", TipoToken.PALABRA_RESERVADA),
-            Map.entry("for", TipoToken.PALABRA_RESERVADA),
-            Map.entry("while", TipoToken.PALABRA_RESERVADA),
-            Map.entry("print", TipoToken.PALABRA_RESERVADA),
-            Map.entry("return", TipoToken.PALABRA_RESERVADA)
+            Map.entry("titan", TipoToken.ORDEN_MILITAR),
+            Map.entry("legion", TipoToken.ORDEN_MILITAR),
+            Map.entry("ataque", TipoToken.ORDEN_MILITAR),
+            Map.entry("orden", TipoToken.ORDEN_MILITAR),
+            Map.entry("muro", TipoToken.ORDEN_MILITAR),
+            Map.entry("humanidad", TipoToken.ORDEN_MILITAR),
+            // Compatibilidad con palabras en inglés
+            Map.entry("if", TipoToken.ORDEN_MILITAR),
+            Map.entry("else", TipoToken.ORDEN_MILITAR),
+            Map.entry("while", TipoToken.ORDEN_MILITAR),
+            Map.entry("print", TipoToken.ORDEN_MILITAR),
+            Map.entry("for", TipoToken.ORDEN_MILITAR),
+            Map.entry("return", TipoToken.ORDEN_MILITAR)
     );
 
     private static final Pattern TOKEN_PATTERN = Pattern.compile(
-            "\"(?:\\\\.|[^\"\\\\])*\"|" +      // Strings (con soporte para escapes)
-                    "\\d+\\.?\\d*|" +                  // Números (enteros y decimales)
+            "\"(?:\\\\.|[^\"\\\\])*\"|" +               // Cadenas
+                    "\\d+\\.?\\d*|" +                  // Números
                     "[a-zA-Z_]\\w*|" +                 // Identificadores
-                    "[+\\-*/%=<>!&|^~]=?|" +          // Operadores (incluyendo compuestos)
-                    "[{}\\[\\](),;.:]|" +             // Símbolos
-                    "//.*|/\\*.*?\\*/|" +            // Comentarios
-                    "\\S"                             // Cualquier otro carácter no espacio
+                    "[+\\-*/%=<>!&|^~]=?|" +           // Operadores
+                    "[{}\\[\\](),;.:]|" +              // Símbolos
+                    "//.*|/\\*.*?\\*/|" +              // Comentarios
+                    "\\S"                              // Otros
     );
 
     private final List<Token> tokens = new ArrayList<>();
     private final List<ErrorLexico> errores = new ArrayList<>();
 
-    /**
-     * Analiza el código fuente y genera una lista de tokens.
-     * @param codigo El código fuente a analizar
-     * @return Lista de tokens generados
-     */
     public List<Token> analizar(String codigo) {
         tokens.clear();
         errores.clear();
@@ -48,23 +45,24 @@ public class AnalizadorLexico {
         }
 
         String[] lineas = codigo.split("\n");
-
         for (int lineaNum = 0; lineaNum < lineas.length; lineaNum++) {
             String linea = lineas[lineaNum].trim();
             if (linea.isEmpty()) continue;
 
             Matcher matcher = TOKEN_PATTERN.matcher(linea);
-
             while (matcher.find()) {
                 String valor = matcher.group();
-                // Saltar comentarios
                 if (valor.startsWith("//") || valor.startsWith("/*")) {
                     continue;
                 }
 
                 TipoToken tipo = identificarToken(valor);
-                if (tipo == TipoToken.ERROR) {
-                    errores.add(new ErrorLexico(valor, lineaNum + 1));
+                if (tipo == TipoToken.TITAN_DESCONOCIDO) {
+                    errores.add(new ErrorLexico(
+                            valor,
+                            lineaNum + 1,
+                            "Token no reconocido: '" + valor + "'"
+                    ));
                 }
                 tokens.add(new Token(tipo, valor, lineaNum + 1));
             }
@@ -73,51 +71,38 @@ public class AnalizadorLexico {
         return Collections.unmodifiableList(tokens);
     }
 
-    /**
-     * Identifica el tipo de token basado en su valor.
-     */
     private TipoToken identificarToken(String valor) {
         if (PALABRAS_RESERVADAS.containsKey(valor)) {
             return PALABRAS_RESERVADAS.get(valor);
         }
         if (valor.matches("[a-zA-Z_]\\w*")) {
-            return TipoToken.IDENTIFICADOR;
+            return TipoToken.SCOUT;
         }
         if (valor.matches("\\d+\\.?\\d*")) {
-            return valor.contains(".") ? TipoToken.CONST_DECIMAL : TipoToken.CONST_ENTERA;
+            return valor.contains(".") ? TipoToken.EQUIPO : TipoToken.SOLDADOS;
         }
         if (valor.matches("\"(?:\\\\.|[^\"\\\\])*\"")) {
-            return TipoToken.STRING;
+            return TipoToken.GRITO;
         }
         if (valor.matches("[+\\-*/%=<>!&|^~]=?")) {
-            return TipoToken.OPERADOR_ARITMETICO;
+            return valor.matches("==|!=|<|>|<=|>=") ? TipoToken.TACTICA_DEFENSA : TipoToken.TACTICA_ATAQUE;
         }
         if (valor.matches("[{}\\[\\](),;.:]")) {
-            return TipoToken.SIMBOLO;
+            if (valor.matches("[{}()\\[\\]]")) {
+                return TipoToken.MURALLA;
+            }
+            return TipoToken.SEPARADOR;
         }
-        return TipoToken.ERROR;
+        return TipoToken.TITAN_DESCONOCIDO;
     }
 
-    /**
-     * Obtiene la lista de errores léxicos encontrados.
-     */
     public List<ErrorLexico> getErrores() {
         return Collections.unmodifiableList(errores);
     }
 
-    /**
-     * Verifica si hubo errores durante el análisis.
-     */
-    public boolean tieneErrores() {
-        return !errores.isEmpty();
-    }
-
-    /**
-     * Obtiene un resumen de errores formateado.
-     */
-    public String getResumenErrores() {
-        return errores.stream()
-                .map(e -> String.format("Línea %d: Token no reconocido '%s'", e.getLinea(), e.getValor()))
-                .collect(Collectors.joining("\n"));
+    public void mostrarErrores() {
+        TablaErrores tablaErrores = new TablaErrores();
+        errores.forEach(tablaErrores::agregarError);
+        tablaErrores.mostrarErrores();
     }
 }

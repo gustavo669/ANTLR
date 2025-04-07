@@ -19,196 +19,107 @@ public class Evaluador {
     private Object evaluar(Nodo nodo, EntornoEjecucion entorno) {
         if (nodo == null) return null;
 
-        switch (nodo.getTipo()) {
-            case MISION:
-                return evaluarMision(nodo, entorno);
-
-            case TITAN:
-                return evaluarTitan(nodo, entorno);
-
-            case ATAQUE:
-                return evaluarAtaque(nodo, entorno);
-
-            case MURO:
-                return evaluarMuro(nodo, entorno);
-
-            case DISTRITO:
-                return evaluarDistrito(nodo, entorno);
-
-            case ORDEN_MILITAR:
-                return evaluarOrden(nodo, entorno);
-
-            case TACTICA:
-                return evaluarTactica(nodo, entorno);
-
-            case SCOUT:
-                return evaluarScout(nodo, entorno);
-
-            case RECURSO:
-                return evaluarRecurso(nodo);
-
-
-            default:
-                throw new RuntimeException("Tipo de nodo no soportado: " + nodo.getTipo());
-        }
+        return switch (nodo.getTipo()) {
+            case MISION -> evaluarMision(nodo, entorno); // Programa principal
+            case TITAN -> evaluarTitan(nodo, entorno);   // If
+            case ATAQUE -> evaluarAtaque(nodo, entorno); // While
+            case MURO -> evaluarMuro(nodo, entorno);     // For
+            case DISTRITO -> evaluarDistrito(nodo, entorno); // Bloque
+            case ORDEN_MILITAR -> evaluarOrden(nodo, entorno); // Print
+            case TACTICA -> evaluarTactica(nodo, entorno);     // Operaciones
+            case SCOUT -> evaluarScout(nodo, entorno);         // Identificadores
+            case RECURSO -> evaluarRecurso(nodo);              // Literales
+            default -> throw new RuntimeException("⚠ Nodo no reconocido: " + nodo.getTipo());
+        };
     }
 
     private Object evaluarMision(Nodo nodo, EntornoEjecucion entorno) {
         Object ultimoValor = null;
-
         for (Nodo hijo : nodo.getHijos()) {
             ultimoValor = evaluar(hijo, entorno);
-
-            if (retornando) {
-                break;
-            }
+            if (retornando) break;
         }
-
         return ultimoValor;
     }
 
     private Object evaluarTitan(Nodo nodo, EntornoEjecucion entorno) {
         List<Nodo> hijos = nodo.getHijos();
-
-        // Evaluar condición
         Object condicion = evaluar(hijos.get(0), entorno);
-
-        // Si la condición es verdadera, ejecutar el bloque principal
         if (esVerdadero(condicion)) {
             return evaluar(hijos.get(1), entorno);
+        } else if (hijos.size() > 2) {
+            return evaluar(hijos.get(2), entorno); // LEGION (else)
         }
-        // Si hay un bloque "legion" (else) y la condición es falsa, ejecutarlo
-        else if (hijos.size() > 2) {
-            return evaluar(hijos.get(2), entorno);
-        }
-
         return null;
     }
 
     private Object evaluarAtaque(Nodo nodo, EntornoEjecucion entorno) {
-        List<Nodo> hijos = nodo.getHijos();
-
-        // Nodo de condición y nodo de cuerpo
-        Nodo condicionNodo = hijos.get(0);
-        Nodo cuerpoNodo = hijos.get(1);
-
-        Object ultimoValor = null;
-
-        // Mientras la condición sea verdadera, ejecutar el cuerpo
-        while (true) {
-            Object condicion = evaluar(condicionNodo, entorno);
-
-            if (!esVerdadero(condicion)) break;
-
-            ultimoValor = evaluar(cuerpoNodo, entorno);
-
+        Nodo condicion = nodo.getHijos().get(0);
+        Nodo cuerpo = nodo.getHijos().get(1);
+        Object resultado = null;
+        while (esVerdadero(evaluar(condicion, entorno))) {
+            resultado = evaluar(cuerpo, entorno);
             if (retornando) break;
         }
-
-        return ultimoValor;
+        return resultado;
     }
 
     private Object evaluarMuro(Nodo nodo, EntornoEjecucion entorno) {
         List<Nodo> hijos = nodo.getHijos();
+        EntornoEjecucion local = new EntornoEjecucion(entorno);
 
-        // Crear un nuevo entorno para el bucle
-        EntornoEjecucion entornoFor = new EntornoEjecucion(entorno);
-
-        // Inicialización, condición, actualización, cuerpo
-        Nodo inicializacionNodo = hijos.get(0);
-        Nodo condicionNodo = hijos.get(1);
-        Nodo actualizacionNodo = hijos.get(2);
-        Nodo cuerpoNodo = hijos.get(3);
-
-        Object ultimoValor = null;
-
-        // Ejecutar inicialización
-        evaluar(inicializacionNodo, entornoFor);
-
-        // Bucle principal
-        while (true) {
-            // Evaluar condición
-            Object condicion = evaluar(condicionNodo, entornoFor);
-
-            if (!esVerdadero(condicion)) break;
-
-            // Ejecutar cuerpo
-            ultimoValor = evaluar(cuerpoNodo, entornoFor);
-
+        evaluar(hijos.get(0), local); // inicialización
+        while (esVerdadero(evaluar(hijos.get(1), local))) {
+            Object res = evaluar(hijos.get(3), local); // cuerpo
             if (retornando) break;
-
-            // Ejecutar actualización
-            evaluar(actualizacionNodo, entornoFor);
+            evaluar(hijos.get(2), local); // actualización
         }
-
-        return ultimoValor;
+        return null;
     }
 
     private Object evaluarDistrito(Nodo nodo, EntornoEjecucion entorno) {
-        // Crear un nuevo entorno para el bloque
-        EntornoEjecucion entornoBloque = new EntornoEjecucion(entorno);
-
-        Object ultimoValor = null;
-
+        EntornoEjecucion local = new EntornoEjecucion(entorno);
+        Object resultado = null;
         for (Nodo hijo : nodo.getHijos()) {
-            ultimoValor = evaluar(hijo, entornoBloque);
-
+            resultado = evaluar(hijo, local);
             if (retornando) break;
         }
-
-        return ultimoValor;
+        return resultado;
     }
 
     private Object evaluarOrden(Nodo nodo, EntornoEjecucion entorno) {
-        // Evaluar la expresión a imprimir
         Object valor = evaluar(nodo.getHijos().get(0), entorno);
-
-        // Imprimir el resultado
         System.out.println("➤ " + valor);
-
         return valor;
     }
 
     private Object evaluarTactica(Nodo nodo, EntornoEjecucion entorno) {
         String operador = nodo.getValor();
-        List<Nodo> hijos = nodo.getHijos();
+        Object izq = evaluar(nodo.getHijos().get(0), entorno);
+        Object der = evaluar(nodo.getHijos().get(1), entorno);
 
-        // Evaluar operandos
-        Object izquierda = evaluar(hijos.get(0), entorno);
-        Object derecha = evaluar(hijos.get(1), entorno);
+        double a = convertirANumero(izq);
+        double b = convertirANumero(der);
 
-        // Convertir operandos a números si es necesario
-        double numIzquierda = convertirANumero(izquierda);
-        double numDerecha = convertirANumero(derecha);
-
-        // Realizar operación según el operador
         return switch (operador) {
-            case "+" -> {
-                // Caso especial: concatenación de strings
-                if (izquierda instanceof String || derecha instanceof String) {
-                    yield String.valueOf(izquierda) + String.valueOf(derecha);
-                } else {
-                    yield numIzquierda + numDerecha;
-                }
-            }
-            case "-" -> numIzquierda - numDerecha;
-            case "*" -> numIzquierda * numDerecha;
+            case "+" -> (izq instanceof String || der instanceof String)
+                    ? String.valueOf(izq) + der : a + b;
+            case "-" -> a - b;
+            case "*" -> a * b;
             case "/" -> {
-                if (numDerecha == 0) {
-                    throw new RuntimeException("¡Los titanes no pueden ser divididos por cero!");
-                }
-                yield numIzquierda / numDerecha;
+                if (b == 0) throw new RuntimeException("⚠ No se puede dividir por cero.");
+                yield a / b;
             }
-            case "%" -> numIzquierda % numDerecha;
-            case "==" -> numIzquierda == numDerecha;
-            case "!=" -> numIzquierda != numDerecha;
-            case "<" -> numIzquierda < numDerecha;
-            case ">" -> numIzquierda > numDerecha;
-            case "<=" -> numIzquierda <= numDerecha;
-            case ">=" -> numIzquierda >= numDerecha;
-            case "&&" -> esVerdadero(izquierda) && esVerdadero(derecha);
-            case "||" -> esVerdadero(izquierda) || esVerdadero(derecha);
-            default -> throw new RuntimeException("Operador desconocido: " + operador);
+            case "%" -> a % b;
+            case "==" -> a == b;
+            case "!=" -> a != b;
+            case "<" -> a < b;
+            case ">" -> a > b;
+            case "<=" -> a <= b;
+            case ">=" -> a >= b;
+            case "&&" -> esVerdadero(izq) && esVerdadero(der);
+            case "||" -> esVerdadero(izq) || esVerdadero(der);
+            default -> throw new RuntimeException("⚠ Táctica desconocida: " + operador);
         };
     }
 
@@ -218,56 +129,26 @@ public class Evaluador {
     }
 
     private Object evaluarRecurso(Nodo nodo) {
-        String valor = nodo.getValor();
-
-        // Si es un número
-        if (valor.matches("\\d+(\\.\\d+)?")) {
-            return valor.contains(".") ? Double.parseDouble(valor) : Integer.parseInt(valor);
-        }
-
-        // Si es una cadena (eliminar comillas)
-        if (valor.startsWith("\"") && valor.endsWith("\"")) {
-            return valor.substring(1, valor.length() - 1);
-        }
-
-        return valor;
+        String val = nodo.getValor();
+        if (val.matches("\\d+(\\.\\d+)?")) return val.contains(".") ? Double.parseDouble(val) : Integer.parseInt(val);
+        if (val.startsWith("\"") && val.endsWith("\"")) return val.substring(1, val.length() - 1);
+        return val;
     }
 
-    // Métodos de utilidad
-
     private boolean esVerdadero(Object valor) {
-        if (valor instanceof Boolean) {
-            return (Boolean) valor;
-        }
-
-        if (valor instanceof Number) {
-            return ((Number) valor).doubleValue() != 0;
-        }
-
-        if (valor instanceof String) {
-            return !((String) valor).isEmpty();
-        }
-
+        if (valor instanceof Boolean b) return b;
+        if (valor instanceof Number n) return n.doubleValue() != 0;
+        if (valor instanceof String s) return !s.isEmpty();
         return valor != null;
     }
 
     private double convertirANumero(Object valor) {
-        if (valor instanceof Number) {
-            return ((Number) valor).doubleValue();
+        if (valor instanceof Number) return ((Number) valor).doubleValue();
+        if (valor instanceof Boolean) return (Boolean) valor ? 1 : 0;
+        if (valor instanceof String s) {
+            try { return Double.parseDouble(s); }
+            catch (NumberFormatException e) { return 0; }
         }
-
-        if (valor instanceof Boolean) {
-            return ((Boolean) valor) ? 1 : 0;
-        }
-
-        if (valor instanceof String) {
-            try {
-                return Double.parseDouble((String) valor);
-            } catch (NumberFormatException e) {
-                return 0;
-            }
-        }
-
         return 0;
     }
 }

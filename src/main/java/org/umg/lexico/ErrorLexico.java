@@ -1,10 +1,11 @@
-package org.umg.analisis.lexico;
+package org.umg.lexico;
 
 import java.util.Objects;
 
 /**
- * Representa un error léxico encontrado durante el análisis de código fuente.
- * Contiene información sobre el valor problemático y su ubicación.
+ * Representa un error léxico detectado durante el análisis de código fuente
+ * del lenguaje temático de Attack on Titan. Incluye el valor incorrecto,
+ * su ubicación y un mensaje descriptivo.
  */
 public class ErrorLexico {
     private final String valor;
@@ -13,39 +14,55 @@ public class ErrorLexico {
     private final String mensaje;
 
     /**
-     * Crea un nuevo error léxico.
+     * Constructor principal para errores léxicos.
      *
-     * @param valor El token o valor que causó el error
-     * @param linea El número de línea donde ocurrió el error (1-based)
-     * @param columna El número de columna donde ocurrió el error (1-based)
-     * @param mensaje Mensaje descriptivo del error
-     * @throws IllegalArgumentException si los parámetros no son válidos
+     * @param valor   El valor/token no reconocido.
+     * @param linea   Línea donde ocurrió el error (comienza en 1).
+     * @param columna Columna donde ocurrió el error (comienza en 1).
+     * @param mensaje Mensaje temático que describe el error.
      */
     public ErrorLexico(String valor, int linea, int columna, String mensaje) {
-        if (valor == null || valor.trim().isEmpty()) {
-            throw new IllegalArgumentException("El valor del error no puede ser nulo o vacío");
+        this.valor = Objects.requireNonNull(valor, "El valor no puede ser nulo").trim();
+        this.mensaje = Objects.requireNonNull(mensaje, "El mensaje no puede ser nulo").trim();
+
+        if (this.valor.isEmpty()) {
+            throw new IllegalArgumentException("El valor del error no puede estar vacío");
         }
-        if (linea <= 0) {
-            throw new IllegalArgumentException("El número de línea debe ser positivo");
+        if (this.mensaje.isEmpty()) {
+            throw new IllegalArgumentException("El mensaje del error no puede estar vacío");
         }
-        if (columna <= 0) {
-            throw new IllegalArgumentException("El número de columna debe ser positivo");
-        }
-        if (mensaje == null || mensaje.trim().isEmpty()) {
-            throw new IllegalArgumentException("El mensaje de error no puede ser nulo o vacío");
+        if (linea <= 0 || columna <= 0) {
+            throw new IllegalArgumentException("La línea y columna deben ser mayores que cero");
         }
 
-        this.valor = valor;
         this.linea = linea;
         this.columna = columna;
-        this.mensaje = mensaje;
     }
 
     /**
-     * Versión simplificada del constructor para compatibilidad.
+     * Constructor con columna por defecto en 1.
+     *
+     * @param valor   Token no reconocido.
+     * @param linea   Línea del error.
+     * @param mensaje Mensaje personalizado.
+     */
+    public ErrorLexico(String valor, int linea, String mensaje) {
+        this(valor, linea, 1, mensaje);
+    }
+
+    /**
+     * Constructor con mensaje temático por defecto.
+     *
+     * @param valor Token no reconocido.
+     * @param linea Línea del error.
      */
     public ErrorLexico(String valor, int linea) {
-        this(valor, linea, 1, "Token no reconocido");
+        this(valor, linea, 1, "¡Token inesperado detectado más allá de las murallas!");
+    }
+
+    /** @return Posición formateada como línea:columna */
+    public String getPosicion() {
+        return linea + ":" + columna;
     }
 
     public String getValor() {
@@ -64,24 +81,15 @@ public class ErrorLexico {
         return mensaje;
     }
 
-    /**
-     * Obtiene la posición del error en formato "línea:columna".
-     */
-    public String getPosicion() {
-        return linea + ":" + columna;
-    }
-
     @Override
     public String toString() {
-        return String.format("Error léxico en %s - %s: '%s'",
-                getPosicion(), mensaje, valor);
+        return String.format("⚠️ [Línea %d, Columna %d] %s → '%s'", linea, columna, mensaje, valor);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ErrorLexico that = (ErrorLexico) o;
+        if (!(o instanceof ErrorLexico that)) return false;
         return linea == that.linea &&
                 columna == that.columna &&
                 valor.equals(that.valor) &&

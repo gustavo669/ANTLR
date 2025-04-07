@@ -1,4 +1,4 @@
-package org.umg.analisis.lexico;
+package org.umg.lexico;
 
 public class ExpresionesRegulares {
     // Expresión 1: Contraseña segura

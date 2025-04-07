@@ -8,192 +8,259 @@ import org.umg.sintactico.contexto.ContextoAnalisis;
 import java.util.List;
 
 public class Parser {
+
     private final List<Token> tokens;
-    private int posicionActual;
-    private Token tokenActual;
     private final ContextoAnalisis contexto;
+    private int posicion;
+    private Token actual;
+    private int errores = 0;
+
+    private static final int MAX_ERRORES = 10;
 
     public Parser(List<Token> tokens) {
         if (tokens == null || tokens.isEmpty()) {
-            throw new IllegalArgumentException("La lista de tokens no puede ser nula o vacía");
+            throw new IllegalArgumentException("¡La legión de tokens está vacía!");
         }
-        this.tokens = List.copyOf(tokens);
-        this.posicionActual = 0;
-        this.tokenActual = tokens.get(0);
+        this.tokens = tokens;
         this.contexto = new ContextoAnalisis();
+        this.posicion = 0;
+        this.actual = tokens.get(0);
     }
 
     public Nodo parse() {
-        Nodo programa = new Nodo("programa");
+        Nodo mision = new Nodo("mision", Nodo.TipoNodo.MISION,
+                actual.getLinea(), actual.getColumna());
+
         while (!finDeTokens()) {
-            programa.agregarHijo(parseDeclaracion());
-        }
-        return programa;
-    }
-
-    private Nodo parseDeclaracion() {
-        try {
-            if (coincide(TipoToken.PALABRA_RESERVADA, "if")) {
-                return parseIf();
+            try {
+                Nodo orden = parseOrden();
+                if (orden != null) {
+                    mision.agregarHijo(orden);
+                }
+            } catch (ParseException e) {
+                reportarError(e.getMessage());
+                if (++errores > MAX_ERRORES) {
+                    System.err.println("¡Demasiadas fallas! Cancelando misión...");
+                    break;
+                }
+                sincronizar();
             }
-            if (coincide(TipoToken.PALABRA_RESERVADA, "print")) {
-                return parsePrint();
+        }
+
+        return mision;
+    }
+
+    private Nodo parseOrden() throws ParseException {
+        if (finDeTokens()) return null;
+
+        if (actual.getTipo() == TipoToken.ORDEN_MILITAR) {
+            return switch (actual.getValor()) {
+                case "titan", "if" -> parseTitan();
+                case "ataque", "while" -> parseAtaque();
+                case "orden", "print" -> parseOrdenMilitar();
+                case "muro", "for" -> parseMuro();
+                default -> throw error("¡Orden militar desconocida: " + actual.getValor() + "!");
+            };
+        }
+
+        return parseTactica();
+    }
+
+    private Nodo parseTitan() throws ParseException {
+        Token token = actual;
+        consumir(TipoToken.ORDEN_MILITAR, token.getValor());
+        consumir(TipoToken.MURALLA, "(");
+        Nodo condicion = parseTactica();
+        consumir(TipoToken.MURALLA, ")");
+
+        Nodo titan = new Nodo("titan", Nodo.TipoNodo.TITAN, token.getLinea(), token.getColumna());
+        titan.agregarHijo(condicion);
+        titan.agregarHijo(parseDistrito());
+
+        if (coincide(TipoToken.ORDEN_MILITAR, "legion") || coincide(TipoToken.ORDEN_MILITAR, "else")) {
+            avanzar();
+            titan.agregarHijo(parseDistrito());
+        }
+
+        return titan;
+    }
+
+    private Nodo parseAtaque() throws ParseException {
+        Token token = actual;
+        consumir(TipoToken.ORDEN_MILITAR, token.getValor());
+        consumir(TipoToken.MURALLA, "(");
+        Nodo condicion = parseTactica();
+        consumir(TipoToken.MURALLA, ")");
+
+        Nodo ataque = new Nodo("ataque", Nodo.TipoNodo.ATAQUE, token.getLinea(), token.getColumna());
+        ataque.agregarHijo(condicion);
+        ataque.agregarHijo(parseDistrito());
+
+        return ataque;
+    }
+
+    private Nodo parseMuro() throws ParseException {
+        Token token = actual;
+        consumir(TipoToken.ORDEN_MILITAR, token.getValor());
+        consumir(TipoToken.MURALLA, "(");
+
+        Nodo init = parseOrden();
+        consumir(TipoToken.SEPARADOR, ";");
+
+        Nodo condicion = parseTactica();
+        consumir(TipoToken.SEPARADOR, ";");
+
+        Nodo actualizacion = parseOrden();
+        consumir(TipoToken.MURALLA, ")");
+
+        Nodo cuerpo = parseDistrito();
+
+        Nodo muro = new Nodo("muro", Nodo.TipoNodo.MURO, token.getLinea(), token.getColumna());
+        muro.agregarHijo(init);
+        muro.agregarHijo(condicion);
+        muro.agregarHijo(actualizacion);
+        muro.agregarHijo(cuerpo);
+
+        return muro;
+    }
+
+    private Nodo parseOrdenMilitar() throws ParseException {
+        Token token = actual;
+        consumir(TipoToken.ORDEN_MILITAR, token.getValor());
+
+        Nodo expresion = parseTactica();
+        consumir(TipoToken.SEPARADOR, ";");
+
+        Nodo orden = new Nodo("orden", Nodo.TipoNodo.ORDEN_MILITAR, token.getLinea(), token.getColumna());
+        orden.agregarHijo(expresion);
+
+        return orden;
+    }
+
+    private Nodo parseDistrito() throws ParseException {
+        Token token = actual;
+        consumir(TipoToken.MURALLA, "{");
+        contexto.abrirDistrito();
+
+        Nodo distrito = new Nodo("distrito", Nodo.TipoNodo.DISTRITO, token.getLinea(), token.getColumna());
+
+        while (!finDeTokens() && !coincide(TipoToken.MURALLA, "}")) {
+            try {
+                Nodo orden = parseOrden();
+                if (orden != null) distrito.agregarHijo(orden);
+            } catch (ParseException e) {
+                reportarError(e.getMessage());
+                sincronizar();
             }
-            return parseExpresion();
-        } catch (ParseException e) {
-            // Recuperación de errores básica
-            System.err.println(e.getMessage());
-            sincronizar();
-            return new Nodo("error");
-        }
-    }
-
-    private Nodo parseIf() {
-        consumir(TipoToken.PALABRA_RESERVADA, "if");
-        consumir(TipoToken.SIMBOLO, "(");
-
-        Nodo condicion = parseExpresion();
-
-        consumir(TipoToken.SIMBOLO, ")");
-        Nodo cuerpo = parseBloque();
-
-        Nodo nodoIf = new Nodo("if", condicion, cuerpo);
-
-        if (coincide(TipoToken.PALABRA_RESERVADA, "else")) {
-            consumir(TipoToken.PALABRA_RESERVADA, "else");
-            Nodo elseCuerpo = parseBloque();
-            nodoIf.agregarHijo(elseCuerpo);
         }
 
-        return nodoIf;
-    }
-
-    private Nodo parsePrint() {
-        consumir(TipoToken.PALABRA_RESERVADA, "print");
-        Nodo expresion = parseExpresion();
-        consumir(TipoToken.SIMBOLO, ";");
-        return new Nodo("print", expresion);
-    }
-
-    private Nodo parseBloque() {
-        consumir(TipoToken.SIMBOLO, "{");
-        contexto.abrirAmbito();
-
-        Nodo bloque = new Nodo("bloque");
-        while (!coincide(TipoToken.SIMBOLO, "}") && !finDeTokens()) {
-            bloque.agregarHijo(parseDeclaracion());
+        if (!finDeTokens()) {
+            consumir(TipoToken.MURALLA, "}");
+        } else {
+            System.err.println("¡Falta cerrar la muralla '}'!");
         }
 
-        consumir(TipoToken.SIMBOLO, "}");
-        contexto.cerrarAmbito();
-        return bloque;
+        contexto.evacuarDistrito();
+        return distrito;
     }
 
-    private Nodo parseExpresion() {
-        Nodo izquierda = parseTermino();
-        return parseExpresionBinaria(izquierda, 0);
+    private Nodo parseTactica() throws ParseException {
+        Nodo izquierda = parseObjetivo();
+        return parseTacticaCompuesta(izquierda, 0);
     }
 
-    private Nodo parseExpresionBinaria(Nodo izquierda, int precedenciaActual) {
-        while (true) {
-            int precedencia = obtenerPrecedencia(tokenActual);
-            if (precedencia < precedenciaActual || finDeTokens()) {
-                return izquierda;
-            }
+    private Nodo parseTacticaCompuesta(Nodo izquierda, int precedenciaActual) throws ParseException {
+        while (!finDeTokens() && actual.getTipo().esTactica()) {
+            int precedencia = obtenerPrecedencia(actual);
+            if (precedencia <= precedenciaActual) break;
 
-            Token operador = tokenActual;
+            Token operador = actual;
             avanzar();
 
-            Nodo derecha = parseTermino();
-            izquierda = new Nodo(operador.getValor(), izquierda, derecha);
+            Nodo derecha = parseObjetivo();
+            Nodo operacion = new Nodo(operador.getValor(), Nodo.TipoNodo.TACTICA,
+                    operador.getLinea(), operador.getColumna());
+            operacion.agregarHijo(izquierda);
+            operacion.agregarHijo(derecha);
+            izquierda = operacion;
         }
+        return izquierda;
     }
 
-    private Nodo parseTermino() {
-        if (coincide(TipoToken.CONST_ENTERA) || coincide(TipoToken.CONST_DECIMAL) ||
-                coincide(TipoToken.IDENTIFICADOR) || coincide(TipoToken.STRING)) {
-
-            Nodo nodo = new Nodo(tokenActual.getValor());
+    private Nodo parseObjetivo() throws ParseException {
+        if (actual.getTipo() == TipoToken.SCOUT || actual.getTipo().esRecurso()) {
+            Nodo.TipoNodo tipo = actual.getTipo() == TipoToken.SCOUT ?
+                    Nodo.TipoNodo.SCOUT : Nodo.TipoNodo.RECURSO;
+            Nodo nodo = new Nodo(actual.getValor(), tipo, actual.getLinea(), actual.getColumna());
             avanzar();
             return nodo;
         }
 
-        if (coincide(TipoToken.SIMBOLO, "(")) {
+        if (coincide(TipoToken.MURALLA, "(")) {
             avanzar();
-            Nodo expresion = parseExpresion();
-            consumir(TipoToken.SIMBOLO, ")");
-            return expresion;
+            Nodo expr = parseTactica();
+            consumir(TipoToken.MURALLA, ")");
+            return expr;
         }
 
-        throw new ParseException("Token inesperado: " + tokenActual.getValor(),
-                tokenActual.getLinea(), tokenActual.getColumna());
+        throw error("¡Objetivo no reconocido! Se esperaba un scout, recurso o expresión entre murallas.");
     }
 
-    // Métodos auxiliares
+    private void sincronizar() {
+        while (!finDeTokens() && !esPuntoSincronizacion()) avanzar();
+    }
+
+    private boolean esPuntoSincronizacion() {
+        return finDeTokens() ||
+                actual.getTipo() == TipoToken.ORDEN_MILITAR ||
+                actual.getValor().equals(";") ||
+                actual.getValor().equals("}");
+    }
+
     private boolean finDeTokens() {
-        return tokenActual.getTipo() == TipoToken.EOF;
-    }
-
-    private boolean coincide(TipoToken tipo) {
-        return tokenActual.getTipo() == tipo;
+        return posicion >= tokens.size();
     }
 
     private boolean coincide(TipoToken tipo, String valor) {
-        return tokenActual.getTipo() == tipo && tokenActual.getValor().equals(valor);
+        return !finDeTokens() && actual.getTipo() == tipo && actual.getValor().equals(valor);
     }
 
-    private void consumir(TipoToken tipo, String valor) {
-        if (coincide(tipo, valor)) {
-            avanzar();
-        } else {
-            throw new ParseException("Se esperaba: " + valor, tokenActual.getLinea(), tokenActual.getColumna());
-        }
+    private void consumir(TipoToken tipo, String valor) throws ParseException {
+        if (!coincide(tipo, valor)) throw error("Se esperaba '" + valor + "'");
+        avanzar();
+    }
+
+    private void avanzar() {
+        posicion++;
+        actual = finDeTokens() ? null : tokens.get(posicion);
     }
 
     private int obtenerPrecedencia(Token token) {
-        if (token.getTipo() != TipoToken.OPERADOR_ARITMETICO) return 0;
         return switch (token.getValor()) {
-            case "+", "-" -> 1;
-            case "*", "/", "%" -> 2;
+            case "*", "/", "%" -> 4;
+            case "+", "-" -> 3;
+            case "<", ">", "<=", ">=", "==", "!=" -> 2;
+            case "&&", "||" -> 1;
             default -> 0;
         };
     }
 
-    private void avanzar() {
-        posicionActual++;
-        tokenActual = posicionActual < tokens.size() ? tokens.get(posicionActual)
-                : new Token(TipoToken.EOF, "", -1, -1);
+    private void reportarError(String mensaje) {
+        System.err.println("[FALLA EN LA MISIÓN] " + mensaje);
     }
 
-    private void sincronizar() {
-        // Avanza hasta encontrar un punto de sincronización
-        while (!finDeTokens()) {
-            if (tokenActual.getTipo() == TipoToken.SIMBOLO) {
-                avanzar();
-                return;
-            }
-            if (coincide(TipoToken.PALABRA_RESERVADA, "if") ||
-                    coincide(TipoToken.PALABRA_RESERVADA, "print")) {
-                return;
-            }
-            avanzar();
-        }
+    private ParseException error(String mensaje) {
+        return new ParseException(mensaje, actual.getLinea(), actual.getColumna());
     }
 
-    public static class ParseException extends RuntimeException {
-        private final int linea;
-        private final int columna;
+    public static class ParseException extends Exception {
+        public final int linea;
+        public final int columna;
 
         public ParseException(String mensaje, int linea, int columna) {
-            super(mensaje);
+            super(String.format("Línea %d:%d - %s", linea, columna, mensaje));
             this.linea = linea;
             this.columna = columna;
-        }
-
-        @Override
-        public String getMessage() {
-            return String.format("Error sintáctico en línea %d, columna %d: %s",
-                    linea, columna, super.getMessage());
         }
     }
 }
