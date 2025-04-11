@@ -1,8 +1,5 @@
 package org.umg.lexico;
 
-import org.umg.TipoToken;
-import org.umg.Token;
-
 import java.util.*;
 import java.util.regex.*;
 
@@ -100,9 +97,4 @@ public class AnalizadorLexico {
         return Collections.unmodifiableList(errores);
     }
 
-    public void mostrarErrores() {
-        TablaErrores tablaErrores = new TablaErrores();
-        errores.forEach(tablaErrores::agregarError);
-        tablaErrores.mostrarErrores();
-    }
 }

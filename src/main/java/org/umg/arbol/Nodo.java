@@ -43,6 +43,10 @@ public class Nodo {
         }
     }
 
+    public Nodo getHijo(int index) {
+        return hijos.get(index);
+    }
+
     /**
      * Constructor para crear un nodo con valor y tipo específico, además de su línea y columna de origen.
      */

@@ -1,6 +1,4 @@
-package org.umg;
-
-import java.util.Objects;
+package org.umg.lexico;
 
 public class Token {
     private final TipoToken tipo;
@@ -8,21 +6,24 @@ public class Token {
     private final int linea;
     private final int columna;
 
+    /**
+     * Constructor completo para un token.
+     *
+     * @param tipo Tipo del token según la enumeración TipoToken
+     * @param valor Valor textual del token
+     * @param linea Número de línea donde aparece el token
+     * @param columna Número de columna donde aparece el token
+     */
     public Token(TipoToken tipo, String valor, int linea, int columna) {
-        this.tipo = Objects.requireNonNull(tipo, "El tipo de token no puede ser nulo");
-        this.valor = Objects.requireNonNull(valor, "El valor del token no puede ser nulo");
-
-        if (linea <= 0) {
-            throw new IllegalArgumentException("El número de línea debe ser positivo");
-        }
-        if (columna <= 0) {
-            throw new IllegalArgumentException("El número de columna debe ser positivo");
-        }
-
+        this.tipo = tipo;
+        this.valor = valor;
         this.linea = linea;
         this.columna = columna;
     }
 
+    /**
+     * Constructor simplificado que asume columna 1.
+     */
     public Token(TipoToken tipo, String valor, int linea) {
         this(tipo, valor, linea, 1);
     }
@@ -43,12 +44,9 @@ public class Token {
         return columna;
     }
 
-    public String getPosicion() {
-        return linea + ":" + columna;
-    }
-
     @Override
     public String toString() {
-        return String.format("Token[%s: '%s' @ %s]", tipo, valor, getPosicion());
+        return String.format("Token[%s]: '%s' en línea %d, columna %d",
+                tipo, valor, linea, columna);
     }
 }

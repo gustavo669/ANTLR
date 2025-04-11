@@ -1,4 +1,4 @@
-package org.umg;
+package org.umg.lexico;
 
 public enum TipoToken {
 

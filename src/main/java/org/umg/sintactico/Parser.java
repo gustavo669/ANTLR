@@ -1,7 +1,7 @@
 package org.umg.sintactico;
 
-import org.umg.Token;
-import org.umg.TipoToken;
+import org.umg.lexico.Token;
+import org.umg.lexico.TipoToken;
 import org.umg.arbol.Nodo;
 import org.umg.sintactico.contexto.ContextoAnalisis;
 

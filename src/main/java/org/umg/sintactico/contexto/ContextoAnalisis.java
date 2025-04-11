@@ -1,6 +1,6 @@
 package org.umg.sintactico.contexto;
 
-import org.umg.TipoToken;
+import org.umg.lexico.TipoToken;
 
 import java.util.*;
 
@@ -25,37 +25,6 @@ public class ContextoAnalisis {
         } else {
             throw new IllegalStateException("¡La pila de distritos está vacía! La muralla ha caído.");
         }
-    }
-
-    public void declararSimbolo(String nombre, TipoToken tipo) {
-        if (pilaDistritos.isEmpty()) {
-            throw new IllegalStateException("¡No hay distritos activos para declarar símbolos!");
-        }
-
-        NivelDistrito distritoActual = pilaDistritos.peek();
-        if (distritoActual.simbolos.containsKey(nombre)) {
-            throw new IllegalStateException("¡Símbolo ya declarado en este distrito: " + nombre + "!");
-        }
-
-        distritoActual.simbolos.put(nombre, tipo);
-    }
-
-    public boolean simboloExiste(String nombre) {
-        for (NivelDistrito distrito : pilaDistritos) {
-            if (distrito.simbolos.containsKey(nombre)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public TipoToken obtenerTipoSimbolo(String nombre) {
-        for (NivelDistrito distrito : pilaDistritos) {
-            if (distrito.simbolos.containsKey(nombre)) {
-                return distrito.simbolos.get(nombre);
-            }
-        }
-        return null;
     }
 
     public static class NivelDistrito {

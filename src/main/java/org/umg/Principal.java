@@ -1,6 +1,7 @@
 package org.umg;
 
 import org.umg.arbol.Nodo;
+import org.umg.lexico.Token;
 import org.umg.sintactico.Parser;
 import org.umg.lexico.AnalizadorLexico;
 
@@ -9,9 +10,9 @@ import java.util.Scanner;
 
 public class Principal {
     private static final String EJEMPLO_CODIGO = """
-      titan (Gustavo + 5) {
-                   orden "Hola Mundo";
-               }
+     titan (45 + 5) {
+               orden "¡Ataquen!";
+             }
     """;
 
     public static void main(String[] args) {
@@ -35,7 +36,6 @@ public class Principal {
             mostrarResultadosSintacticos(arbol);
 
             EntornoEjecucion entorno = new EntornoEjecucion();
-
             ejecutarPrograma(arbol, entorno);
 
         } catch (Exception e) {

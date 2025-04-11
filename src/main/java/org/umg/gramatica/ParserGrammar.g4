@@ -11,7 +11,12 @@ declaracion
     | estructuraAtaque
     | estructuraMuro
     | sentenciaOrden
+    | asignacion
     | expresion SEMI
+    ;
+
+asignacion
+    : SCOUT '=' expresion SEMI
     ;
 
 estructuraTitan

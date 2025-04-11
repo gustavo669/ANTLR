@@ -29,7 +29,8 @@ public class Evaluador {
             case TACTICA -> evaluarTactica(nodo, entorno);     // Operaciones
             case SCOUT -> evaluarScout(nodo, entorno);         // Identificadores
             case RECURSO -> evaluarRecurso(nodo);              // Literales
-            default -> throw new RuntimeException("⚠ Nodo no reconocido: " + nodo.getTipo());
+            case EQUIPO -> evaluarAsignacion(nodo, entorno); // Asignación
+            default -> throw new RuntimeException("Nodo no reconocido: " + nodo.getTipo());
         };
     }
 
@@ -48,7 +49,7 @@ public class Evaluador {
         if (esVerdadero(condicion)) {
             return evaluar(hijos.get(1), entorno);
         } else if (hijos.size() > 2) {
-            return evaluar(hijos.get(2), entorno); // LEGION (else)
+            return evaluar(hijos.get(2), entorno);
         }
         return null;
     }
@@ -68,11 +69,11 @@ public class Evaluador {
         List<Nodo> hijos = nodo.getHijos();
         EntornoEjecucion local = new EntornoEjecucion(entorno);
 
-        evaluar(hijos.get(0), local); // inicialización
+        evaluar(hijos.get(0), local);
         while (esVerdadero(evaluar(hijos.get(1), local))) {
-            Object res = evaluar(hijos.get(3), local); // cuerpo
+            Object res = evaluar(hijos.get(3), local);
             if (retornando) break;
-            evaluar(hijos.get(2), local); // actualización
+            evaluar(hijos.get(2), local);
         }
         return null;
     }
@@ -89,7 +90,7 @@ public class Evaluador {
 
     private Object evaluarOrden(Nodo nodo, EntornoEjecucion entorno) {
         Object valor = evaluar(nodo.getHijos().get(0), entorno);
-        System.out.println("➤ " + valor);
+        System.out.println(" ➤ " + valor);
         return valor;
     }
 
@@ -107,7 +108,7 @@ public class Evaluador {
             case "-" -> a - b;
             case "*" -> a * b;
             case "/" -> {
-                if (b == 0) throw new RuntimeException("⚠ No se puede dividir por cero.");
+                if (b == 0) throw new RuntimeException("No se puede dividir por cero.");
                 yield a / b;
             }
             case "%" -> a % b;
@@ -119,7 +120,7 @@ public class Evaluador {
             case ">=" -> a >= b;
             case "&&" -> esVerdadero(izq) && esVerdadero(der);
             case "||" -> esVerdadero(izq) || esVerdadero(der);
-            default -> throw new RuntimeException("⚠ Táctica desconocida: " + operador);
+            default -> throw new RuntimeException("Táctica desconocida: " + operador);
         };
     }
 
@@ -151,4 +152,10 @@ public class Evaluador {
         }
         return 0;
     }
+    private Object evaluarAsignacion(Nodo nodo, EntornoEjecucion entorno) {
+        String nombre = nodo.getHijos().get(0).getValor();
+        Object valor = evaluar(nodo.getHijos().get(1), entorno);
+        return null;
+    }
+
 }

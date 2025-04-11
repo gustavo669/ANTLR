@@ -1,45 +1,49 @@
 package org.umg;
 
-import org.umg.arbol.Nodo;
-
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Representa un entorno de ejecución o "formación" en el que los scouts operan.
+ * Soporta jerarquías entre entornos como en una cadena de mando.
+ */
 public class EntornoEjecucion {
-    private final Map<String, Object> variables;
-    private EntornoEjecucion padre;
+    private final Map<String, Object> formacion; // Variables en este entorno
+    private final EntornoEjecucion comandante;   // Entorno superior (padre)
 
     public EntornoEjecucion() {
-        this.variables = new HashMap<>();
-        this.padre = null;
+        this.formacion = new HashMap<>();
+        this.comandante = null;
     }
 
-    public EntornoEjecucion(EntornoEjecucion padre) {
-        this.variables = new HashMap<>();
-        this.padre = padre;
+    public EntornoEjecucion(EntornoEjecucion comandante) {
+        this.formacion = new HashMap<>();
+        this.comandante = comandante;
     }
 
-    public void definirVariable(String nombre, Object valor) {
-        variables.put(nombre, valor);
-    }
-
+    /**
+     * Asigna un valor a una variable ya existente en la jerarquía de entornos.
+     */
     public void asignarVariable(String nombre, Object valor) {
-        if (variables.containsKey(nombre)) {
-            variables.put(nombre, valor);
-        } else if (padre != null) {
-            padre.asignarVariable(nombre, valor);
+        if (formacion.containsKey(nombre)) {
+            formacion.put(nombre, valor);
+        } else if (comandante != null) {
+            comandante.asignarVariable(nombre, valor);
         } else {
-            throw new RuntimeException("Variable no definida: " + nombre);
+            throw new RuntimeException("⚠ Scout '" + nombre + "' no ha sido enlistado en ninguna formación.");
         }
     }
 
+    /**
+     * Obtiene el valor de una variable buscándola en el entorno actual y ascendiendo si es necesario.
+     */
     public Object obtenerVariable(String nombre) {
-        if (variables.containsKey(nombre)) {
-            return variables.get(nombre);
-        } else if (padre != null) {
-            return padre.obtenerVariable(nombre);
+        if (formacion.containsKey(nombre)) {
+            return formacion.get(nombre);
+        } else if (comandante != null) {
+            return comandante.obtenerVariable(nombre);
         } else {
-            throw new RuntimeException("Variable no encontrada: " + nombre);
+            throw new RuntimeException("Scout '" + nombre + "' no ha sido encontrado en la cadena de mando.");
         }
     }
 }
