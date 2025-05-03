@@ -11,6 +11,7 @@ public class AnalizadorLexico {
             Map.entry("orden", TipoToken.ORDEN_MILITAR),
             Map.entry("muro", TipoToken.ORDEN_MILITAR),
             Map.entry("humanidad", TipoToken.ORDEN_MILITAR),
+
             // Compatibilidad con palabras en inglés
             Map.entry("if", TipoToken.ORDEN_MILITAR),
             Map.entry("else", TipoToken.ORDEN_MILITAR),

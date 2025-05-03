@@ -1,8 +1,5 @@
 lexer grammar LexerGrammar;
 
-// ========================
-// COMANDOS MILITARES (Palabras reservadas)
-// ========================
 TITAN:       'titan';       // Estructura de decisión (if)
 LEGION:      'legion';      // Cláusula alternativa (else)
 ORDEN:       'orden';       // Comando de despliegue (print)
@@ -12,22 +9,15 @@ MURO:        'muro';        // Defensa iterativa (for)
 RECONOCER:   'reconocer';   // Declaración de función
 TROPAS:      'tropas';      // Declaración de variables
 
-// ========================
-// ARSENAL (Operadores)
-// ========================
 MULT:        '*';           // Garras (multiplicación)
 DIV:         '/';           // Escudo (división)
 ADD:         '+';           // Refuerzos (suma)
 SUB:         '-';           // Bajas (resta)
 MOD:         '%';           // Reservas (módulo)
 
-// Estrategias combinadas
 PUNTAZOS:    '++';          // Ataque rápido (incremento)
 RETIRADA:    '--';          // Retroceso (decremento)
 
-// ========================
-// TÁCTICAS (Operadores de comparación)
-// ========================
 MAYOR_QUE:   '>';           // Más fuerte que
 MENOR_QUE:   '<';           // Más débil que
 IGUALDAD:    '==';          // Mismo titan
