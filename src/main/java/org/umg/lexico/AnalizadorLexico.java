@@ -3,7 +3,11 @@ package org.umg.lexico;
 import java.util.*;
 import java.util.regex.*;
 
+/**
+ * Clase encargada del análisis léxico del código fuente en el lenguaje temático de Attack on Titan.
+ */
 public class AnalizadorLexico {
+    // Definición de palabras reservadas
     private static final Map<String, TipoToken> PALABRAS_RESERVADAS = Map.ofEntries(
             Map.entry("titan", TipoToken.ORDEN_MILITAR),
             Map.entry("legion", TipoToken.ORDEN_MILITAR),
@@ -12,7 +16,7 @@ public class AnalizadorLexico {
             Map.entry("muro", TipoToken.ORDEN_MILITAR),
             Map.entry("humanidad", TipoToken.ORDEN_MILITAR),
 
-            // Compatibilidad con palabras en inglés
+            // Palabras en inglés
             Map.entry("if", TipoToken.ORDEN_MILITAR),
             Map.entry("else", TipoToken.ORDEN_MILITAR),
             Map.entry("while", TipoToken.ORDEN_MILITAR),
@@ -21,6 +25,7 @@ public class AnalizadorLexico {
             Map.entry("return", TipoToken.ORDEN_MILITAR)
     );
 
+    // Expresión regular para identificar los tokens
     private static final Pattern TOKEN_PATTERN = Pattern.compile(
             "\"(?:\\\\.|[^\"\\\\])*\"|" +               // Cadenas
                     "\\d+\\.?\\d*|" +                  // Números
@@ -32,11 +37,10 @@ public class AnalizadorLexico {
     );
 
     private final List<Token> tokens = new ArrayList<>();
-    private final List<ErrorLexico> errores = new ArrayList<>();
+    private final TablaErrores tablaErrores = new TablaErrores();
 
     public List<Token> analizar(String codigo) {
         tokens.clear();
-        errores.clear();
 
         if (codigo == null || codigo.trim().isEmpty()) {
             return Collections.emptyList();
@@ -51,14 +55,15 @@ public class AnalizadorLexico {
             while (matcher.find()) {
                 String valor = matcher.group();
                 if (valor.startsWith("//") || valor.startsWith("/*")) {
-                    continue;
+                    continue; // Ignorar comentarios
                 }
 
                 TipoToken tipo = identificarToken(valor);
                 if (tipo == TipoToken.TITAN_DESCONOCIDO) {
-                    errores.add(new ErrorLexico(
+                    tablaErrores.agregarError(new ErrorLexico(
                             valor,
                             lineaNum + 1,
+                            matcher.start() + 1,
                             "Token no reconocido: '" + valor + "'"
                     ));
                 }
@@ -82,20 +87,32 @@ public class AnalizadorLexico {
         if (valor.matches("\"(?:\\\\.|[^\"\\\\])*\"")) {
             return TipoToken.GRITO;
         }
-        if (valor.matches("[+\\-*/%=<>!&|^~]=?")) {
-            return valor.matches("==|!=|<|>|<=|>=") ? TipoToken.TACTICA_DEFENSA : TipoToken.TACTICA_ATAQUE;
+        if (valor.matches("==|!=|<|>|<=|>=")) {
+            return TipoToken.TACTICA_DEFENSA;
         }
-        if (valor.matches("[{}\\[\\](),;.:]")) {
-            if (valor.matches("[{}()\\[\\]]")) {
-                return TipoToken.MURALLA;
-            }
+        if (valor.matches("[+\\-*/]")) {
+            return TipoToken.TACTICA_ATAQUE;
+        }
+        if (valor.matches("=|\\+=|\\-=")) {
+            return TipoToken.ASIGNACION_ORDEN;
+        }
+        if (valor.matches("&&|\\|\\||!")) {
+            return TipoToken.ESTRATEGIA;
+        }
+        if (valor.matches("[{}()\\[\\]]")) {
+            return TipoToken.MURALLA;
+        }
+        if (valor.matches("[,;:]")) {
             return TipoToken.SEPARADOR;
         }
         return TipoToken.TITAN_DESCONOCIDO;
     }
 
-    public List<ErrorLexico> getErrores() {
-        return Collections.unmodifiableList(errores);
+    public List<Token> getTokens() {
+        return tokens;
     }
 
+    public TablaErrores getTablaErrores() {
+        return tablaErrores;
+    }
 }

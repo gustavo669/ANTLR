@@ -1,6 +1,8 @@
 package org.umg;
 
 import org.umg.arbol.Nodo;
+import org.umg.modelo.TablaSimbolos;
+
 import java.util.List;
 
 public class Evaluador {
@@ -20,16 +22,16 @@ public class Evaluador {
         if (nodo == null) return null;
 
         return switch (nodo.getTipo()) {
-            case MISION -> evaluarMision(nodo, entorno); // Programa principal
-            case TITAN -> evaluarTitan(nodo, entorno);   // If
-            case ATAQUE -> evaluarAtaque(nodo, entorno); // While
-            case MURO -> evaluarMuro(nodo, entorno);     // For
-            case DISTRITO -> evaluarDistrito(nodo, entorno); // Bloque
-            case ORDEN_MILITAR -> evaluarOrden(nodo, entorno); // Print
-            case TACTICA -> evaluarTactica(nodo, entorno);     // Operaciones
-            case SCOUT -> evaluarScout(nodo, entorno);         // Identificadores
-            case RECURSO -> evaluarRecurso(nodo);              // Literales
-            case EQUIPO -> evaluarAsignacion(nodo, entorno); // Asignación
+            case MISION -> evaluarMision(nodo, entorno);
+            case TITAN -> evaluarTitan(nodo, entorno);
+            case ATAQUE -> evaluarAtaque(nodo, entorno);
+            case MURO -> evaluarMuro(nodo, entorno);
+            case DISTRITO -> evaluarDistrito(nodo, entorno);
+            case ORDEN_MILITAR -> evaluarOrden(nodo, entorno);
+            case TACTICA -> evaluarTactica(nodo, entorno);
+            case SCOUT -> evaluarScout(nodo, entorno);
+            case RECURSO -> evaluarRecurso(nodo);
+            case EQUIPO -> evaluarAsignacion(nodo, entorno);
             default -> throw new RuntimeException("Nodo no reconocido: " + nodo.getTipo());
         };
     }
@@ -152,10 +154,24 @@ public class Evaluador {
         }
         return 0;
     }
+
     private Object evaluarAsignacion(Nodo nodo, EntornoEjecucion entorno) {
         String nombre = nodo.getHijos().get(0).getValor();
         Object valor = evaluar(nodo.getHijos().get(1), entorno);
-        return null;
+
+        entorno.setVariable(nombre, valor);
+        TablaSimbolos.agregar(nombre, tipoDeValor(valor));
+
+        System.out.println("Asignado " + nombre + " = " + valor);
+        return valor;
     }
 
+    private String tipoDeValor(Object valor) {
+        if (valor == null) return "Nulo";
+        if (valor instanceof Integer) return "Entero";
+        if (valor instanceof Double) return "Decimal";
+        if (valor instanceof Boolean) return "Booleano";
+        if (valor instanceof String) return "Cadena";
+        return valor.getClass().getSimpleName();
+    }
 }

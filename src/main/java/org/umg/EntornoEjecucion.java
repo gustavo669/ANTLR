@@ -22,6 +22,13 @@ public class EntornoEjecucion {
     }
 
     /**
+     * Declara o crea una nueva variable en el entorno actual.
+     */
+    public void setVariable(String nombre, Object valor) {
+        formacion.put(nombre, valor);
+    }
+
+    /**
      * Asigna un valor a una variable ya existente en la jerarquía de entornos.
      */
     public void asignarVariable(String nombre, Object valor) {
@@ -34,6 +41,7 @@ public class EntornoEjecucion {
         }
     }
 
+
     /**
      * Obtiene el valor de una variable buscándola en el entorno actual y ascendiendo si es necesario.
      */
@@ -45,5 +53,6 @@ public class EntornoEjecucion {
         } else {
             throw new RuntimeException("Scout '" + nombre + "' no ha sido encontrado en la cadena de mando.");
         }
+
     }
 }

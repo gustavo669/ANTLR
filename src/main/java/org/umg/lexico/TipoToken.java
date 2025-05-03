@@ -2,43 +2,43 @@ package org.umg.lexico;
 
 public enum TipoToken {
 
-    ORDEN_MILITAR("Orden militar", "titan, legion, ataque, orden, humanidad"),
+    ORDEN_MILITAR("Orden militar", "Instrucciones clave"),
 
+    SCOUT("Scout", "Identificadores"),
 
-    SCOUT("Scout", "eren, mikasa, armin, levi"),
+    SOLDADOS("Soldados", "Números enteros"),
 
-    SOLDADOS("Soldados", "10, 20, 100"),                    // Constantes enteras
-    EQUIPO("Equipo de maniobras", "3.14, 0.5"),             // Constantes decimales
+    EQUIPO("Equipo de maniobras", "Números decimales"),
 
+    GRITO("Grito de batalla", "Texto"),
 
-    GRITO("Grito de batalla", "\"¡Avancemos!\", \"¡Derriben al titán!\""),
+    TACTICA_ATAQUE("Táctica de ataque", "Operadores aritméticos"),
 
-    TACTICA_ATAQUE("Táctica de ataque", "+, -, *, /"),
-    TACTICA_DEFENSA("Táctica defensiva", "==, !=, <, >"),
-    ESTRATEGIA("Estrategia", "&&, ||, !"),
-    ASIGNACION_ORDEN("Asignación de orden", "=, +=, -="),
+    TACTICA_DEFENSA("Táctica defensiva", "Operadores relacionales"),
 
+    ESTRATEGIA("Estrategia", "Operadores lógicos"),
 
-    MURALLA("Muralla", "{, }, (, ), [, ]"),
-    SEPARADOR("Separador de misiones", ", ; :"),
+    ASIGNACION_ORDEN("Asignación de orden", "Operadores de asignación"),
 
+    MURALLA("Muralla", "Símbolos de agrupación"),
 
-    INFORME("Informe de cuartel", "// Refuerzos necesarios"),
-    INFORME_SECRETO("Informe clasificado", "/* Coordenadas */"),
+    SEPARADOR("Separador de misiones", "Separadores"),
 
+    INFORME("Informe de cuartel", "Comentario de línea"),
 
-    FIN_EXPEDICION("Fin de expedición", ""),                // Token EOF
+    INFORME_SECRETO("Informe clasificado", "Comentario multilinea"),
 
-    TITAN_DESCONOCIDO("Titán no identificado", "");         // Token no reconocido
+    FIN_EXPEDICION("Fin de expedición", "Fin del código"),
+
+    TITAN_DESCONOCIDO("Titán no identificado", "Token no válido");
 
     private final String descripcion;
-    private final String ejemplos;
+    private final String resumen;
 
-    TipoToken(String descripcion, String ejemplos) {
+    TipoToken(String descripcion, String resumen) {
         this.descripcion = descripcion;
-        this.ejemplos = ejemplos;
+        this.resumen = resumen;
     }
-
 
     public boolean esTactica() {
         return this == TACTICA_ATAQUE ||
@@ -53,6 +53,6 @@ public enum TipoToken {
 
     @Override
     public String toString() {
-        return descripcion + (ejemplos.isEmpty() ? "" : " (" + ejemplos + ")");
+        return descripcion + " - " + resumen;
     }
 }

@@ -17,18 +17,15 @@ public class Nodo {
     public enum TipoNodo {
         MISION("Misión principal"),
         DISTRITO("Distrito/bloque de código"),
-
         TACTICA("Táctica/operación"),
         SCOUT("Scout/identificador"),
         RECURSO("Recurso numérico"),
         GRITO("Grito de batalla/cadena"),
-
         TITAN("Estructura titan (if)"),
         LEGION("Cláusula legion (else)"),
         ATAQUE("Estructura ataque (while)"),
         MURO("Estructura muro (for)"),
         ORDEN_MILITAR("Orden militar (print)"),
-
         EQUIPO("Equipo de maniobras");
 
         private final String descripcion;

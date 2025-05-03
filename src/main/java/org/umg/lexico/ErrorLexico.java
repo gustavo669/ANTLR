@@ -3,9 +3,7 @@ package org.umg.lexico;
 import java.util.Objects;
 
 /**
- * Representa un error léxico detectado durante el análisis de código fuente
- * del lenguaje temático de Attack on Titan. Incluye el valor incorrecto,
- * su ubicación y un mensaje descriptivo.
+ * Representa un error léxico detectado durante el análisis de código fuente.
  */
 public class ErrorLexico {
     private final String valor;
@@ -13,14 +11,6 @@ public class ErrorLexico {
     private final int columna;
     private final String mensaje;
 
-    /**
-     * Constructor principal para errores léxicos.
-     *
-     * @param valor   El valor/token no reconocido.
-     * @param linea   Línea donde ocurrió el error (comienza en 1).
-     * @param columna Columna donde ocurrió el error (comienza en 1).
-     * @param mensaje Mensaje temático que describe el error.
-     */
     public ErrorLexico(String valor, int linea, int columna, String mensaje) {
         this.valor = Objects.requireNonNull(valor, "El valor no puede ser nulo").trim();
         this.mensaje = Objects.requireNonNull(mensaje, "El mensaje no puede ser nulo").trim();
@@ -37,32 +27,6 @@ public class ErrorLexico {
 
         this.linea = linea;
         this.columna = columna;
-    }
-
-    /**
-     * Constructor con columna por defecto en 1.
-     *
-     * @param valor   Token no reconocido.
-     * @param linea   Línea del error.
-     * @param mensaje Mensaje personalizado.
-     */
-    public ErrorLexico(String valor, int linea, String mensaje) {
-        this(valor, linea, 1, mensaje);
-    }
-
-    /**
-     * Constructor con mensaje temático por defecto.
-     *
-     * @param valor Token no reconocido.
-     * @param linea Línea del error.
-     */
-    public ErrorLexico(String valor, int linea) {
-        this(valor, linea, 1, "¡Token inesperado detectado más allá de las murallas!");
-    }
-
-    /** @return Posición formateada como línea:columna */
-    public String getPosicion() {
-        return linea + ":" + columna;
     }
 
     public String getValor() {
