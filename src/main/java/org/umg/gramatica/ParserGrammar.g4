@@ -4,8 +4,9 @@ options {
     tokenVocab = LexerGrammar;
 }
 
-programa: declaracion+ EOF;
+programa: declaracion* EOF;
 
+// === Declaraciones ===
 declaracion
     : estructuraTitan
     | estructuraAtaque
@@ -15,10 +16,12 @@ declaracion
     | expresion SEMI
     ;
 
+// === Asignación ===
 asignacion
-    : SCOUT '=' expresion SEMI
+    : ID '=' expresion SEMI
     ;
 
+// === Estructuras temáticas ===
 estructuraTitan
     : TITAN LPAREN expresion RPAREN bloque (LEGION bloque)?
     ;
@@ -31,19 +34,22 @@ estructuraMuro
     : MURO LPAREN expresion SEMI expresion SEMI expresion RPAREN bloque
     ;
 
-sentenciaOrden: ORDEN expresion SEMI;
+sentenciaOrden
+    : ORDEN expresion SEMI
+    ;
 
+// === Bloques ===
 bloque
-    : LBRACE declaracion* RBRACE
-    | declaracion
+    : '{' declaracion* '}'
     ;
 
+// === Expresiones (precedencia y jerarquía) ===
 expresion
-    : expresion (MULT | DIV | ADD | SUB) expresion    # ExpresionBinaria
-    | expresion (MAYOR_QUE | MENOR_QUE | IGUALDAD | DESIGUALDAD) expresion # ExpresionBinaria
-    | LPAREN expresion RPAREN               # ExpresionParentesis
-    | NUMERO                                 # ExpresionNumero
-    | GRITO                                  # ExpresionString
-    | SCOUT                                  # ExpresionIdentificador
+    : expresion op=(MUL | DIV) expresion         #ExprMultiplicacion
+    | expresion op=(ADD | SUB) expresion         #ExprSuma
+    | expresion op=(MAYOR_QUE | MENOR_QUE | IGUALDAD | DESIGUALDAD) expresion #ExprComparacion
+    | '(' expresion ')'                          #ExprParentesis
+    | NUMERO                                     #ExprNumero
+    | GRITO                                      #ExprString
+    | ID                                         #ExprVariable
     ;
-

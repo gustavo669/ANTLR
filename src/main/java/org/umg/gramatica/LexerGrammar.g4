@@ -1,62 +1,62 @@
 lexer grammar LexerGrammar;
 
-TITAN:       'titan';       // Estructura de decisión (if)
-LEGION:      'legion';      // Cláusula alternativa (else)
-ORDEN:       'orden';       // Comando de despliegue (print)
-ATAQUE:      'ataque';      // Ciclo de ataque (while)
-HUMANIDAD:   'humanidad';   // Retorno al cuartel (return)
-MURO:        'muro';        // Defensa iterativa (for)
-RECONOCER:   'reconocer';   // Declaración de función
-TROPAS:      'tropas';      // Declaración de variables
-
-MULT:        '*';           // Garras (multiplicación)
-DIV:         '/';           // Escudo (división)
-ADD:         '+';           // Refuerzos (suma)
-SUB:         '-';           // Bajas (resta)
-MOD:         '%';           // Reservas (módulo)
-
-PUNTAZOS:    '++';          // Ataque rápido (incremento)
-RETIRADA:    '--';          // Retroceso (decremento)
-
-MAYOR_QUE:   '>';           // Más fuerte que
-MENOR_QUE:   '<';           // Más débil que
-IGUALDAD:    '==';          // Mismo titan
-DESIGUALDAD: '!=';          // Titan diferente
-MAYOR_IGUAL: '>=';          // No menos fuerte que
-MENOR_IGUAL: '<=';          // No más fuerte que
+// ========================
+// PALABRAS CLAVE TEMÁTICAS
+// ========================
+TITAN:       'titan';
+LEGION:      'legion';
+ORDEN:       'orden';
+ATAQUE:      'ataque';
+HUMANIDAD:   'humanidad';
+MURO:        'muro';
+RECONOCER:   'reconocer';
+TROPAS:      'tropas';
 
 // ========================
-// SEÑALES ESTRATÉGICAS (Símbolos)
+// OPERADORES
 // ========================
-LPAREN:      '(';           // Inicio de formación
-RPAREN:      ')';           // Fin de formación
-LBRACE:      '{';           // Inicio de muralla
-RBRACE:      '}';           // Fin de muralla
-SEMI:        ';';           // Fin de misión
-COMA:        ',';           // Separador de unidades
-PUNTO:       '.';           // Punto estratégico
-ASIGNACION:  '=';           // Despliegue de fuerzas
+MUL:         '*';
+DIV:         '/';
+ADD:         '+';
+SUB:         '-';
+MOD:         '%';
+
+PUNTAZOS:    '++';
+RETIRADA:    '--';
+
+MAYOR_QUE:   '>';
+MENOR_QUE:   '<';
+IGUALDAD:    '==';
+DESIGUALDAD: '!=';
+MAYOR_IGUAL: '>=';
+MENOR_IGUAL: '<=';
 
 // ========================
-// SUMINISTROS (Literales)
+// SÍMBOLOS
 // ========================
-NUMERO:      [0-9]+ ('.' [0-9]+)?;  // Soldados/Equipo (enteros/decimales)
-GRITO:       '"' .*? '"';            // Grito de batalla (cadena)
-SCOUT:       [a-zA-Z_][a-zA-Z0-9_]*; // Identificador
+LPAREN:      '(';
+RPAREN:      ')';
+LBRACE:      '{';
+RBRACE:      '}';
+SEMI:        ';';
+COMA:        ',';
+PUNTO:       '.';
+ASIGNACION:  '=';
 
 // ========================
-// COMUNICACIONES (Comentarios)
+// LITERALES
 // ========================
-INFORME:     '//' ~[\r\n]* -> skip;      // Informe de campo
-INFORME_SECRETO: '/*' .*? '*/' -> skip;  // Informe clasificado
+NUMERO:      [0-9]+ ('.' [0-9]+)?;
+GRITO:       '"' (~["\\] | '\\' .)* '"';  // Cadena con escapes
+ID:          [a-zA-Z_][a-zA-Z0-9_]*;
 
 // ========================
-// CAMUFLAJE (Espacios)
+// COMENTARIOS
 // ========================
-CAMUFLAJE:   [ \t\r\n]+ -> skip;         // Espacios en blanco
+INFORME:          '//' ~[\r\n]* -> skip;
+INFORME_SECRETO:  '/*' .*? '*/' -> skip;
 
 // ========================
-// ERRORES
+// ESPACIOS
 // ========================
-ERROR_TITAN: . ;
-               // Titan desconocido
+ESPACIOS:   [ \t\r\n]+ -> skip;
