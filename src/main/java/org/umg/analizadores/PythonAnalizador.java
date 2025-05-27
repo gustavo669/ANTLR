@@ -1,7 +1,5 @@
 package org.umg.analizadores;
 
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.umg.errores.CustomErrorListener;

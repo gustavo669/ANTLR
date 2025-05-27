@@ -1,5 +1,7 @@
 package org.umg.lexico;
 
+import org.umg.errores.ErrorLexico;
+
 import java.util.*;
 import java.util.regex.*;
 
@@ -112,7 +114,4 @@ public class AnalizadorLexico {
         return tokens;
     }
 
-    public TablaErrores getTablaErrores() {
-        return tablaErrores;
-    }
 }

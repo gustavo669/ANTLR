@@ -1,5 +1,7 @@
 package org.umg.lexico;
 
+import org.umg.errores.ErrorLexico;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,11 +15,4 @@ public class TablaErrores {
         errores.add(error);
     }
 
-    public List<ErrorLexico> obtenerErrores() {
-        return errores;
-    }
-
-    public boolean tieneErrores() {
-        return !errores.isEmpty();
-    }
 }
